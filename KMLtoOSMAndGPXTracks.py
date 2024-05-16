@@ -8,6 +8,7 @@
 #
 # 5/14/2024: V1.0 Initial version
 # 5/16/2024: V1.1 Some cleanup and fixes
+# 5/16/2024: V1.2 Remove characters from track names that are illegal filenames
 #========================================================================================
 import sys
 import argparse
@@ -17,7 +18,7 @@ import os
 from pathlib import Path
 
 PROGRAM_NAME = Path(sys.argv[0]).stem
-PROGRAM_VERSION = "1.1"
+PROGRAM_VERSION = "1.2"
 DEFAULT_TRACK_TRANSPARENCY = "80"
 DEFAULT_WAYPOINT_DESCRIPTION = ""
 DEFAULT_TRACK_DESCRIPTION = ""
@@ -401,9 +402,14 @@ def processTrack(placemark,args,folderName):
 			elif args.split == SPLIT_TYPE_DISTANCE:
 				#split interval is in meters and args.interval is in miles, so convert miles to meters
 				ET.SubElement(extensionsElement, "osmand:split_interval").text = str(int(float(args.interval) * 1609.34))
-			# Write track to a GPX file
+			# Write track to a GPX file.  
+			# Track file names are taken from the track name which may contain illegal finename characters.
+			# Strip out these illegal characters.  Allow all alpha numerics and characters from allowedChars
+			allowedChars = " ._-"
+			name = "".join(i for i in name if (i.isalnum() or i in allowedChars))
+			#print("  name: ",name,end="")
 			filename = os.path.join(folderName, name+'.gpx')
-			#print("  Writing track to file: ",filename)
+			#print("  Writing track to file: ",filename,end="")
 			writeGPXFile(GPXElement,filename)
 	print("")
 	return
