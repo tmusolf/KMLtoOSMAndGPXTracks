@@ -14,7 +14,7 @@ kml_file | | Input KML file path/name. Required
 -a | --arrows | When present, OSMAnd will display directional arrows on a track.
 -e | --ends | When present, OSMAnd will display start and finish icons at the ends of the track.
 -t | --transparency | Transparency value to use for all tracks.  Specified as a 2 digit hex value without the preceeding "0x".  00 is fully transparent and FF is opaque.
--s | --split | Display distance or time splits along tracks. [no_split, distance, time] Default: no_split.
+-s | --split | Display distance or time splits along tracks. [no_split, distance, time] Default: no_split.  Appears to be an issue with OSMAnd using the split values from a GPX file.
 -i | --interval | When distance or time split option is specified this is the split interval in miles [0.0-100.0] or time in seconds.
 -w | --width | If present, this track width is used for all track widths, overiding values found in the KML file. Integer value between 1-24
 
