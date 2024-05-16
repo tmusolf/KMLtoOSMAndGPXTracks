@@ -6,7 +6,8 @@
 #
 # See readme.md for more details
 #
-# 5/14/2024: V1.0
+# 5/14/2024: V1.0 Initial version
+# 5/16/2024: V1.1 Some cleanup and fixes
 #========================================================================================
 import sys
 import argparse
@@ -16,8 +17,7 @@ import os
 from pathlib import Path
 
 PROGRAM_NAME = Path(sys.argv[0]).stem
-PROGRAM_VERSION = "1.0"
-WAYPOINT_FILENAME = "waypoints.gpx"
+PROGRAM_VERSION = "1.1"
 DEFAULT_TRACK_TRANSPARENCY = "80"
 DEFAULT_WAYPOINT_DESCRIPTION = ""
 DEFAULT_TRACK_DESCRIPTION = ""
@@ -261,105 +261,96 @@ def addGPXElement():
 # processWaypoint
 #========================================================================================
 def processWaypoint(placemark,waypointGPX):
-	print("  processing Waypoint: ", end="")
+	print("  Waypoint: ", end="")
 	coordinates = placemark.find(".//{http://www.opengis.net/kml/2.2}coordinates")
 	name        = placemark.find(".//{http://www.opengis.net/kml/2.2}name")
 	description = placemark.find(".//{http://www.opengis.net/kml/2.2}description")
 	style_url   = placemark.findtext(".//{http://www.opengis.net/kml/2.2}styleUrl")
 
 	if name is None:
-		name = DEFAULT_WAYPOINT_NAME
+		print("No name found, skipping waypoint,end=""")
 	else:
 		name = name.text.strip()
-	print(name+" ", end="")
+		print(name+" ", end="")
 
-	if coordinates is None:
-		print(" No coordinates found, skipping waypoint")
-	else:
-		coordinates = coordinates.text.strip().split(",")
-		longitude   = coordinates[0]
-		latitude    = coordinates[1]
-		elevation   = f"{float(coordinates[2]):.1f}"
-		print("["+latitude+","+longitude+","+elevation+"]",end="")
-		# If it exists, add the description from the KML Placemark element
-		if description is None:
-			description = DEFAULT_WAYPOINT_DESCRIPTION
+		if coordinates is None:
+			print(" No coordinates found, skipping waypoint",end="")
 		else:
-			description = description.text.strip()
-		# add extensions elements
-		# Use styleURL tag value to extract color and icon ID
-		# New icons appear to be of this style with an icon ID and a color
-		#	<styleUrl>#icon-1577-DB4436-labelson</styleUrl>
-		# Old style icons come in two flavors, neither of which has color info
-		#	<styleUrl>#icon-1369</styleUrl>
-		#	<styleUrl>#icon-1085-labelson</styleUrl>
-		#
-		# if there is no color field (get an exception on trying to access the field)
-		# then we will use the DEFAULT_ICON_COLOR value.  If the second field contains
-		# the string "labelson" we'll also use the DEFAULT_ICON_COLOR value.
-		# print("     style URL: ",style_url)
-		if style_url:
-			style = style_url.split("-")
-			waypt = KMLToOSMAndIcon(style[1])
-		else:
-			waypt = KMLToOSMAndIcon("unknown")
-		if waypt.color == KMLCOLOR: # we use value from KML file
-			try:
-				if style[2] == "labelson":  # there is no color value in styleURL string
-					waypt.color = DEFAULT_ICON_COLOR
-				else:
-					waypt.color=style[2]
-			except IndexError:
-				waypt.color=DEFAULT_ICON_COLOR
-		print(" ["+waypt.icon+","+waypt.color+","+waypt.background+"]")
-		
-		# Add the data into the waypoint GPX file
-		waypointElement = ET.SubElement(waypointGPX, "wpt", lat=latitude, lon=longitude)
-		ET.SubElement(waypointElement,"ele").text = elevation
-		ET.SubElement(waypointElement, "name").text = name
-		ET.SubElement(waypointElement, "desc").text = description
-		extensionsElement = ET.SubElement(waypointElement,"extensions")
-		ET.SubElement(extensionsElement,"osmand:icon").text = waypt.icon
-		ET.SubElement(extensionsElement,"osmand:background").text = waypt.background
-		ET.SubElement(extensionsElement, "osmand:color").text = "#" + waypt.color
+			coordinates = coordinates.text.strip().split(",")
+			longitude   = coordinates[0]
+			latitude    = coordinates[1]
+			elevation   = f"{float(coordinates[2]):.1f}"
+			#print("["+latitude+","+longitude+","+elevation+"]",end="")
+			# If it exists, add the description from the KML Placemark element
+			if description is None:
+				description = DEFAULT_WAYPOINT_DESCRIPTION
+			else:
+				description = description.text.strip()
+			# add extensions elements
+			# Use styleURL tag value to extract color and icon ID
+			# New icons appear to be of this style with an icon ID and a color
+			#	<styleUrl>#icon-1577-DB4436-labelson</styleUrl>
+			# Old style icons come in two flavors, neither of which has color info
+			#	<styleUrl>#icon-1369</styleUrl>
+			#	<styleUrl>#icon-1085-labelson</styleUrl>
+			#
+			# if there is no color field (get an exception on trying to access the field)
+			# then we will use the DEFAULT_ICON_COLOR value.  If the second field contains
+			# the string "labelson" we'll also use the DEFAULT_ICON_COLOR value.
+			# print("     style URL: ",style_url)
+			if style_url:
+				style = style_url.split("-")
+				waypt = KMLToOSMAndIcon(style[1])
+			else:
+				waypt = KMLToOSMAndIcon("unknown")
+			if waypt.color == KMLCOLOR: # we use value from KML file
+				try:
+					if style[2] == "labelson":  # there is no color value in styleURL string
+						waypt.color = DEFAULT_ICON_COLOR
+					else:
+						waypt.color=style[2]
+				except IndexError:
+					waypt.color=DEFAULT_ICON_COLOR
+			#print(" ["+waypt.icon+","+waypt.color+","+waypt.background+"]",end="")
+			
+			# Add the data into the waypoint GPX file
+			waypointElement = ET.SubElement(waypointGPX, "wpt", lat=latitude, lon=longitude)
+			ET.SubElement(waypointElement,"ele").text = elevation
+			ET.SubElement(waypointElement, "name").text = name
+			ET.SubElement(waypointElement, "desc").text = description
+			extensionsElement = ET.SubElement(waypointElement,"extensions")
+			ET.SubElement(extensionsElement,"osmand:icon").text = waypt.icon
+			ET.SubElement(extensionsElement,"osmand:background").text = waypt.background
+			ET.SubElement(extensionsElement, "osmand:color").text = "#" + waypt.color
+	print("")
 	return
 #========================================================================================
 # processTrack
 #========================================================================================
 def processTrack(placemark,args,folderName):
-	print("  processTrack: ",end="")
+	print("  Track: ",end="")
 
 	coordinates = placemark.find(".//{http://www.opengis.net/kml/2.2}coordinates")
 	name        = placemark.find(".//{http://www.opengis.net/kml/2.2}name")
 	description = placemark.find(".//{http://www.opengis.net/kml/2.2}description")
 
 	if name is None:
-		print("No name found, skipping track")
+		print("No name found, skipping track",end="")
 	else:
 		name = name.text.strip()
 		print(name+" ", end="")
 
 		if coordinates is None:
-			print("No coordinates found, skipping track")
+			print("No coordinates found, skipping track",end="")
 		else:
 			if description is None:
 				description = DEFAULT_TRACK_DESCRIPTION
 			else:
 				description = description.text.strip()
-			print("description:>>>"+description+"<<<")
+			#print("description:>>>"+description+"<<<")
 			GPXElement = addGPXElement()
-			# add metadata tags that may apply to all elements in the file.
-			# seems like this should be at the track level, but it's not.
-			# based on trial and error with sample GPX files and the not totally correct OSMAnd
-			# documentation, I determined that the metadata osmand:desc tag is the only place
-			# where you can have description text that can be seen in OSMAnd.
-			# This only makes sense if you are using the mode = tracks option to put
-			# each track in it's own GPX file.
-
 			metadataElement   = ET.SubElement(GPXElement,"metadata")
-			extensionsElement = ET.SubElement(metadataElement,"extensions")
-			ET.SubElement(extensionsElement, "name").text = name
-			ET.SubElement(extensionsElement, "osmand:desc").text = description
+			ET.SubElement(metadataElement, "desc").text = description
 			trackElement = ET.SubElement(GPXElement,"trk")
 			ET.SubElement(trackElement, "name").text = name
 			coordinates = coordinates.text.strip().split()
@@ -391,8 +382,8 @@ def processTrack(placemark,args,folderName):
 				color = DEFAULT_TRACK_COLOR
 				#width will default to whatever OSMAnd does
 			color = "#" + args.transparency + color
-			print(" color: ",color,end="")
-			print(" width: ",width,end="")
+			#print(" color: ",color,end="")
+			#print(" width: ",width,end="")
 
 			extensionsElement = ET.SubElement(GPXElement,"extensions")
 			ET.SubElement(extensionsElement, "osmand:color").text = color
@@ -412,8 +403,9 @@ def processTrack(placemark,args,folderName):
 				ET.SubElement(extensionsElement, "osmand:split_interval").text = str(int(float(args.interval) * 1609.34))
 			# Write track to a GPX file
 			filename = os.path.join(folderName, name+'.gpx')
-			print("  Writing track to file: ",filename)
+			#print("  Writing track to file: ",filename)
 			writeGPXFile(GPXElement,filename)
+	print("")
 	return
 #========================================================================================
 # Main
@@ -426,7 +418,7 @@ def main():
 	args = setupParseCmdLine()
 
 	outputFolderName = os.path.join(Path(args.kml_file).parents[0],Path(args.kml_file).stem)
-	waypointFileName = os.path.join(outputFolderName, WAYPOINT_FILENAME)
+	waypointFileName = os.path.join(outputFolderName, "WayPts-"+Path(args.kml_file).stem+".gpx")
 
 	print("")
 	print("KML to OSMAnd GPX file conversion, one track per file.")
@@ -440,7 +432,7 @@ def main():
 	print("  Track split:            ", args.split)
 	print("  Track split interval:   ", args.interval)
 	print("  Track start/end icons:  ", args.ends)
-	print("  Track direction arrows: ",args.arrows)
+	print("  Track direction arrows: ", args.arrows)
 	print("")
 	print("Starting KML file conversion...")
 
@@ -463,14 +455,14 @@ def main():
 	print("")
 	print("  Total waypoint count:", f'{countTotalWaypoints:>3}')
 	print("  Total track count:   ", f'{countTotalTracks:>3}')
-	print("")
+
 
 	if countTotalWaypoints > 0:
 		# Write waypoints to a GPX file
-		print("  Writing waypoints to file: ",waypointFileName)
+		#print("  Writing waypoints to file: ",waypointFileName)
 		writeGPXFile(waypointGPX,waypointFileName)
-	else:
-		print("  No waypoints in KML file, no waypoint GPX file created.")
+#	else:
+#		print("  No waypoints in KML file, no waypoint GPX file created.")
 	print("")
 	print("Processing complete")
 #========================================================================================
