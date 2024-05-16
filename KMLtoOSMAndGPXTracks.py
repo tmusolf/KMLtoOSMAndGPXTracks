@@ -9,6 +9,12 @@
 # 5/14/2024: V1.0 Initial version
 # 5/16/2024: V1.1 Some cleanup and fixes
 # 5/16/2024: V1.2 Remove characters from track names that are illegal filenames
+# 5/16/2024: V1.3 Added code to change boolean data getting written to tags to be lower case to match 
+#   what OSMAnd does. Found out that the split_type and Split_interval tags don't seem to 
+#   have an effect once the track GPX file is loaded into OSMAnd.  If I activate the split 
+#   feature in OSMAnd and then export the GPX it's the same tags.  It appears that OSMAnd 
+#   isn't using the values from the GPX file.  Arrows and ends both work depending on their 
+#   true/false values so something is different about split.
 #========================================================================================
 import sys
 import argparse
@@ -18,7 +24,7 @@ import os
 from pathlib import Path
 
 PROGRAM_NAME = Path(sys.argv[0]).stem
-PROGRAM_VERSION = "1.2"
+PROGRAM_VERSION = "1.3"
 DEFAULT_TRACK_TRANSPARENCY = "80"
 DEFAULT_WAYPOINT_DESCRIPTION = ""
 DEFAULT_TRACK_DESCRIPTION = ""
@@ -393,15 +399,17 @@ def processTrack(placemark,args,folderName):
 			if args.width is not None:
 				width = str(args.width)
 			ET.SubElement(extensionsElement, "osmand:width").text = width
-			ET.SubElement(extensionsElement, "osmand:show_arrows").text = str(args.arrows)
-			ET.SubElement(extensionsElement, "osmand:show_start_finish").text = str(args.ends)
+			ET.SubElement(extensionsElement, "osmand:show_arrows").text = str(args.arrows).lower()
+			ET.SubElement(extensionsElement, "osmand:show_start_finish").text = str(args.ends).lower()
 			ET.SubElement(extensionsElement, "osmand:split_type").text = args.split
+			#??? Can't get OSMAnd to recognize these extensions. If I activate them manually in OSMAnd and then export
+			# the GPX file it appears to be the same tags in the same element. Arrows and ends work fine.
 			if args.split == SPLIT_TYPE_TIME:
 				#split time is in seconds and args.interval is in minutes, so convert.
 				ET.SubElement(extensionsElement, "osmand:split_interval").text = str(int(float(args.interval) * 60))
 			elif args.split == SPLIT_TYPE_DISTANCE:
 				#split interval is in meters and args.interval is in miles, so convert miles to meters
-				ET.SubElement(extensionsElement, "osmand:split_interval").text = str(int(float(args.interval) * 1609.34))
+				ET.SubElement(extensionsElement, "osmand:split_interval").text = f"{(float(args.interval) * 1609.34):.2f}"
 			# Write track to a GPX file.  
 			# Track file names are taken from the track name which may contain illegal finename characters.
 			# Strip out these illegal characters.  Allow all alpha numerics and characters from allowedChars

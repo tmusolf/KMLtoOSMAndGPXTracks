@@ -26,7 +26,7 @@ echo ***Missing input file: %infile% ***
 echo.
 goto end
 :execute
-py %pyprogram% %infile% -w 12
+py %pyprogram% %infile% -w 12 -e -a -s distance -i 1.0
 :end
 echo.
 echo Done
