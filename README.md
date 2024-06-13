@@ -1,4 +1,8 @@
 # KMLtoOSMAndGPXTracks
+There is a new utility [GoogleMapToOSMAndGPX](https://github.com/tmusolf/GoogleMapToOSMAndGPX) that goes directly from a google map to OSMAnd GPX files, without having to go through an intermediate KML file stage.  It also handles google map layers.
+
+*******
+
 Convert a google my maps KML file to a collection of OSMAnd style GPX files, including icon conversion.
 
 A utility to convert a google maps KML file into GPX files. A folder is created using the basename of the KML file.  All waypoints are placed in a single file and each track is placed in it's own file using the track name.  OSMAnd specific extensions are used in the GPX files.
