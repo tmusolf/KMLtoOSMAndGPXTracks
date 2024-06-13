@@ -1,5 +1,5 @@
 # KMLtoOSMAndGPXTracks
-There is a new utility [GoogleMapToOSMAndGPX](https://github.com/tmusolf/GoogleMapToOSMAndGPX) that goes directly from a google map to OSMAnd GPX files, without having to go through an intermediate KML file stage.  It also handles google map layers.
+There is a new utility [GoogleMapToOSMAndGPX](https://github.com/tmusolf/GoogleMapToOSMAndGPX) that goes directly from a google map to OSMAnd GPX files, without having to go through an intermediate KML file stage.  It translates tracks and almost all google maps icons.  It also handles google map layers.
 
 *******
 
